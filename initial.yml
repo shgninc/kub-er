@@ -1,0 +1,53 @@
+---
+- name: Running initial.yml ...
+  hosts: all 
+  gather_facts: false
+
+  become: yes
+  tasks:
+   - name: resolv.conf copy 
+     copy: 
+       backup: yes 
+       src: resolv
+       dest: /etc/resolv.conf
+       owner: root
+       group: root
+       mode: '0644' 
+     tags:
+     - new_worker
+
+   - name: installing inital package
+     apt:
+        pkg: 
+         - sudo
+         - curl
+         - htop
+         - apt-transport-https
+         - ca-certificates
+         - gnupg-agent
+         - software-properties-common
+         - dnsutils
+        update_cache: yes
+     tags:
+     - new_worker
+
+   - name: create the 'shgn' user
+     user: name=shgn append=yes state=present createhome=yes shell=/bin/bash
+     tags:
+     - new_worker
+
+   - name: allow 'shgn' to have passwordless sudo
+     lineinfile:
+        dest: /etc/sudoers
+        line: 'shgn ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+     tags:
+     - new_worker
+
+   - name: set up authorized keys for the shgn user
+     authorized_key: user=shgn key="{{item}}"
+     with_file:
+         - ~/.ssh/id_rsa.pub
+     tags:
+     - new_worker
+

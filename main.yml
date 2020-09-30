@@ -1,0 +1,12 @@
+- name: Running initial.yml
+  include: initial.yml
+  tags: new-worker
+- name: Running prerequierments.yml
+  include: kuber-prerequirments.yml
+  tags: new-worker
+- name: Running master.yml
+  include: master.yml
+- name: Running workers.yml
+  include: workers.yml
+  tags: new-worker
+

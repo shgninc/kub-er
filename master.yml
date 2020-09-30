@@ -1,0 +1,39 @@
+- hosts: master
+  become: yes
+  tasks:
+    - name: initialize the cluster
+      shell: kubeadm init --pod-network-cidr=192.168.2.0/24 >> cluster_initialized.txt
+      args:
+        chdir: $HOME
+        creates: cluster_initialized.txt
+
+    - name: create .kube directory
+      become: yes
+      become_user: shgn
+      file:
+        path: $HOME/.kube
+        state: directory
+        mode: 0755
+
+    - name: copy admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/shgn/.kube/config
+        remote_src: yes
+        owner: shgn
+
+    - name: install Pod network
+      become: yes
+      become_user: shgn
+      shell: kubectl create -f https://docs.projectcalico.org/manifests/tigera-operator.yaml >> pod_network_setup.txt
+      shell: kubectl create -f https://docs.projectcalico.org/manifests/custom-resources.yaml >> pod_network_setup.txt
+      args:
+        chdir: $HOME
+        creates: pod_network_setup.txt
+
+    - name: set bash completion for kubectl
+      become: yes
+      become_user: shgn
+      shell: echo 'source <(kubectl completion bash)' >>~/.bashrc
+      args:
+        chdir: $HOME
