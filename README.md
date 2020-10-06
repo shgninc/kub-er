@@ -55,3 +55,4 @@ This playbook is not complete, so we need these:
  * Handeling Certs
  * Loadbalancer
  * Manage Storage
+ * Manage Networks
